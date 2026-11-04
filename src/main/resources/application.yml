@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: minicore
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+#core:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/minicore
+#    username: postgres
+#    password: 1234
+##app:
+##  run:
+##    intervl: 5000
+#
+#
+#
+#
