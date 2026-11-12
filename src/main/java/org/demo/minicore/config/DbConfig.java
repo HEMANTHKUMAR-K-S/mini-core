@@ -12,7 +12,7 @@ import org.springframework.context.annotation.PropertySource;
 import javax.sql.DataSource;
 
 @Configuration
-@PropertySource("file:C:/Users/Solum_BLR_IND/Desktop/externalConfig/application.properties")
+//@PropertySource("file:C:/Users/Solum_BLR_IND/Desktop/externalConfig/application.properties")
 public class DbConfig {
 
     @Value("${database.ip}")

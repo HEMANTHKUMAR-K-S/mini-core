@@ -1,19 +1,45 @@
 spring:
+  config:
+    import: "file:C:/Users/Solum_BLR_IND/Desktop/externalConfig/application.properties"
   application:
     name: minicore
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    database:
+      ip: ${database.ip}
+      port: ${database.port}
+      username: ${database.username}
+      password: ${database.password}
+      name: ${database.name}
+      platform: ${database.platform}
+
+  rabbitmq:
+   host: ${rabbitmq.host}
+   port: ${rabbitmq.port}
+   username: ${rabbitmq.username}
+   password: ${rabbitmq.password}
+
+rabbitmq:
+  exchange:
+    name: ${rabbitmq.exchange.name}
+    type: ${rabbitmq.exchange.type}
+server:
+  port: 8080
+
+#consumer:
+#  base-url: ${consumer.base-url}
+
 #core:
 #  datasource:
 #    url: jdbc:postgresql://localhost:5432/minicore
 #    username: postgres
 #    password: 1234
-##app:
-##  run:
-##    intervl: 5000
-#
+#app:
+#  run:
+#    intervl: 5000
+##
 #
 #
 #
