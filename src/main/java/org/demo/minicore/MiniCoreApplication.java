@@ -8,6 +8,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
@@ -15,6 +16,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @PropertySource(
         "file:C:/Users/Solum_BLR_IND/Desktop/intervals/application.properties"
+)
+@IntegrationComponentScan(
+        basePackages = "org.demo.minicore.gateway"
 )
 public class MiniCoreApplication extends SpringBootServletInitializer {
 
