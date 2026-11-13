@@ -17,9 +17,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @PropertySource(
         "file:C:/Users/Solum_BLR_IND/Desktop/intervals/application.properties"
 )
-@IntegrationComponentScan(
-        basePackages = "org.demo.minicore.gateway"
-)
 public class MiniCoreApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
