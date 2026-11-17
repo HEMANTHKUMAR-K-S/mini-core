@@ -17,6 +17,9 @@ public class Attendance {
 
     private LocalDateTime checkInTime;
 
+    // New field for checkout
+    private LocalDateTime checkOutTime;
+
     public Long getId() {
         return id;
     }
@@ -35,5 +38,13 @@ public class Attendance {
 
     public void setCheckInTime(LocalDateTime checkInTime) {
         this.checkInTime = checkInTime;
+    }
+
+    public LocalDateTime getCheckOutTime() {
+        return checkOutTime;
+    }
+
+    public void setCheckOutTime(LocalDateTime checkOutTime) {
+        this.checkOutTime = checkOutTime;
     }
 }

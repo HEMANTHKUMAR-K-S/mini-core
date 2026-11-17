@@ -1,6 +1,6 @@
+
 package org.demo.minicore.config;
 
-import org.demo.minicore.service.CheckInService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,15 +12,21 @@ import org.springframework.messaging.MessageChannel;
 @Configuration
 public class CheckInIntegrationConfig {
 
-    @Bean()
-    public MessageChannel checkInChannel(){
+    // Check-in channel
+    @Bean
+    public MessageChannel checkInChannel() {
         return new DirectChannel();
     }
 
+    // Check-out channel
     @Bean
-    public IntegrationFlow CheckInFlow(
-            MessageChannel checkInChannel,
-            CheckInService checkInService) {
+    public MessageChannel checkOutChannel() {
+        return new DirectChannel();
+    }
+
+    // Check-in HTTP flow
+    @Bean
+    public IntegrationFlow checkInFlow() {
 
         return IntegrationFlow
                 .from(
@@ -30,6 +36,21 @@ public class CheckInIntegrationConfig {
                                 .payloadExpression("#pathVariables['name']")
                 )
                 .channel("checkInChannel")
+                .get();
+    }
+
+    // Check-out HTTP flow
+    @Bean
+    public IntegrationFlow checkOutFlow() {
+
+        return IntegrationFlow
+                .from(
+                        Http.inboundGateway("/check-out/{name}")
+                                .requestMapping(mapping ->
+                                        mapping.methods(HttpMethod.POST))
+                                .payloadExpression("#pathVariables['name']")
+                )
+                .channel("checkOutChannel")
                 .get();
     }
 }
