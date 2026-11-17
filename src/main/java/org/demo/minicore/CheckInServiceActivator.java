@@ -1,61 +1,76 @@
-
 package org.demo.minicore;
 
+import org.demo.minicore.dto.CheckInResponse;
 import org.demo.minicore.service.CheckInService;
-import org.demo.minicore.config.MultiProcessorTaskExecutor;
 import org.demo.minicore.repository.UserRepository;
-import org.demo.minicore.watcher.CheckOutServiceActivator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class CheckInServiceActivator {
 
     private final CheckInService checkInService;
     private final UserRepository userRepository;
-    private final MultiProcessorTaskExecutor taskExecutor;
+
+    private final ThreadPoolTaskExecutor checkInExecutor;
 
 
-    private static final Logger log =
-            LoggerFactory.getLogger(CheckInServiceActivator.class);
+    private static final Logger log = LoggerFactory.getLogger(CheckInServiceActivator.class);
 
-    public CheckInServiceActivator(
-            CheckInService checkInService,
-            UserRepository userRepository,
-            MultiProcessorTaskExecutor taskExecutor) {
+    public CheckInServiceActivator(CheckInService checkInService, UserRepository userRepository, @Qualifier("checkInExecutor")ThreadPoolTaskExecutor checkInExecutor) {
 
         this.checkInService = checkInService;
         this.userRepository = userRepository;
-        this.taskExecutor = taskExecutor;
+        this.checkInExecutor = checkInExecutor;
     }
+
 
     @ServiceActivator(inputChannel = "checkInChannel")
     public String checkInProcess(String name) {
 
-        // 1. Validate employee before submitting task
-        userRepository.findByName(name)
-                .orElseThrow(() ->
-                        new RuntimeException("Employee not found: " + name));
+        // 1. Actual check-in happens synchronously
+        CheckInResponse response = checkInService.checkIn(name);
 
-        // 2. Submit attendance processing to executor
-        taskExecutor.execute(() -> {
+        log.info(
+                "Employee {} checked in successfully at {}",
+                name,
+                response.getCheckInTime()
+        );
+
+        // 2. Retrieve logs asynchronously
+        checkInExecutor.execute(() -> {
+
             try {
-                checkInService.checkInAndGetLogs(name);// task/work arrive here to executor
-                log.info("Thread: {} | Employee: {} | Check-in at: {}", Thread.currentThread().getName(), name, LocalDateTime.now());
+
+                log.info(
+                        "Thread: {} | Employee: {} | Total logs: {}",
+                        Thread.currentThread().getName(),
+                        name
+//                        logs.size()
+                );
+
             } catch (Exception ex) {
-                System.err.println(
-                        "Check-in failed for: " + name + " | " + ex.getMessage());
+
+                log.error(
+                        "Failed to retrieve logs for employee: {}",
+                        name,
+                        ex
+                );
             }
         });
 
-        // 3. Return acknowledgement
-        return "Check-in request accepted for: " + name;
+        // 3. Return immediately after check-in and task submission
+        return "Check-in successful for employee: " + name;
     }
+
 }

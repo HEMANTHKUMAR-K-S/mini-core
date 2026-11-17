@@ -1,12 +1,14 @@
-package org.demo.minicore.watcher;
+package org.demo.minicore;
 
-import org.demo.minicore.config.MultiProcessorTaskExecutor;
 import org.demo.minicore.repository.AttendanceRepo;
 import org.demo.minicore.repository.UserRepository;
+import org.demo.minicore.service.CheckInService;
 import org.demo.minicore.service.CheckOutService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,26 +18,30 @@ public class CheckOutServiceActivator {
             LoggerFactory.getLogger(CheckOutServiceActivator.class);
 
     private final CheckOutService checkOutService;
+    private final CheckInService checkInService;
     private final UserRepository userRepository;
     private final AttendanceRepo attendanceRepo;
-    private final MultiProcessorTaskExecutor taskExecutor;
+    private final ThreadPoolTaskExecutor checkOutExecutor;
 
     public CheckOutServiceActivator(
             CheckOutService checkOutService,
+            CheckInService checkInService,
             UserRepository userRepository,
             AttendanceRepo attendanceRepo,
-            MultiProcessorTaskExecutor taskExecutor) {
+            @Qualifier("checkOutExecutor")
+            ThreadPoolTaskExecutor checkOutExecutor) {
 
         this.checkOutService = checkOutService;
+        this.checkInService = checkInService;
         this.userRepository = userRepository;
         this.attendanceRepo = attendanceRepo;
-        this.taskExecutor = taskExecutor;
+        this.checkOutExecutor = checkOutExecutor;
     }
 
     @ServiceActivator(inputChannel = "checkOutChannel")
     public String checkOutProcess(String name) {
 
-        // Step 1: Check whether employee exists
+        // Step 1: Validate employee
         userRepository.findByName(name)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -52,20 +58,35 @@ public class CheckOutServiceActivator {
                             + name);
         }
 
-        // Step 3: Submit task to thread pool
-        taskExecutor.execute(() -> {
-            try {
-                checkOutService.checkOut(name);
+        // Step 3: Perform actual checkout synchronously
+        checkOutService.checkOut(name);
 
-                log.info("Checkout completed for employee: {}", name);
+        log.info(
+                "Checkout completed synchronously | Employee: {} | Thread: {}",
+                name,
+                Thread.currentThread().getName()
+        );
+
+        // Step 4: Retrieve employee logs asynchronously
+        checkOutExecutor.execute(() -> {
+            try {
+
+                log.info(
+                        "Checkout logs retrieved | Employee: {} | Thread: {} | Total logs: {}",
+                        name,
+                        Thread.currentThread().getName()
+                );
 
             } catch (Exception ex) {
-                log.error("Asynchronous checkout failed for employee: {}",
-                        name, ex);
+                log.error(
+                        "Asynchronous checkout log retrieval failed for employee: {}",
+                        name,
+                        ex
+                );
             }
         });
 
-        // Step 4: Return immediate acknowledgement
-        return "Checkout request accepted for: " + name;
+        // Step 5: Return acknowledgement
+        return "Checkout successful for: " + name;
     }
 }

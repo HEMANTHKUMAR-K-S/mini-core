@@ -1,13 +1,13 @@
 
 package org.demo.minicore.service;
 
-import jakarta.transaction.Transactional;
 import org.demo.minicore.dto.CheckInResponse;
 import org.demo.minicore.entity.Attendance;
 import org.demo.minicore.entity.User;
 import org.demo.minicore.repository.AttendanceRepo;
 import org.demo.minicore.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,13 +26,15 @@ public class CheckInService {
         this.userRepository = userRepository;
     }
 
+    // SYNCHRONOUS CHECK-IN
     @Transactional
-    public CheckInResponse checkInAndGetLogs(String name) {
+    public CheckInResponse checkIn(String name) {
 
-        // 1. First validate whether employee exists
+        // 1. Validate employee
         User user = userRepository.findByName(name)
                 .orElseThrow(() ->
-                        new RuntimeException("Employee not found: " + name));
+                        new RuntimeException(
+                                "Employee not found: " + name));
 
         // 2. Check whether employee already has an active check-in
         boolean alreadyCheckedIn = attendanceRepo
@@ -55,22 +57,26 @@ public class CheckInService {
         // 5. Save attendance
         attendanceRepo.save(attendance);
 
-        // 6. Retrieve attendance logs
-        List<org.demo.minicore.attendance.dto.LogResponse> logs =
-                attendanceRepo
-                        .findByUser_NameOrderByCheckInTimeDesc(name)
-                        .stream()
-                        .map(record ->
-                                new org.demo.minicore.attendance.dto.LogResponse(
-                                        record.getCheckInTime()))
-                        .toList();
-
-        // 7. Return response
+        // 6. Return check-in response without logs
         return new CheckInResponse(
                 name,
                 "CHECKED_IN",
                 checkInTime,
-                logs
+                List.of()
         );
+    }
+
+    // ASYNCHRONOUS LOG RETRIEVAL
+    @Transactional(readOnly = true)
+    public List<org.demo.minicore.attendance.dto.LogResponse>
+    getLogs(String name) {
+
+        return attendanceRepo
+                .findByUser_NameOrderByCheckInTimeDesc(name)
+                .stream()
+                .map(record ->
+                        new org.demo.minicore.attendance.dto.LogResponse(
+                                record.getCheckInTime()))
+                .toList();
     }
 }
