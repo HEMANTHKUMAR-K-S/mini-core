@@ -1,8 +1,8 @@
+
 package org.demo.minicore.watcher;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -12,12 +12,9 @@ import java.nio.file.*;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 
+@Slf4j
 @Component
-@EnableIntegration
 public class DirectoryWatcher {
-
-    @Value("${file.backupath}")
-    private String backupPath;
 
     private final MessageChannel fileEventChannel;
 
@@ -30,70 +27,96 @@ public class DirectoryWatcher {
 
     public void startWatching(String directoryPath) {
 
+        Path directory = Path.of(directoryPath)
+                .toAbsolutePath()
+                .normalize();
+
         try (WatchService watchService =
                      FileSystems.getDefault().newWatchService()) {
 
-            Path directory = Path.of(directoryPath);
+            if (!Files.isDirectory(directory)) {
+                throw new IOException(
+                        "Input directory does not exist: " + directory
+                );
+            }
 
             directory.register(
                     watchService,
                     ENTRY_CREATE,
-                    ENTRY_DELETE,
                     ENTRY_MODIFY
             );
 
+           log.info("Watching directory: " + directory);
 
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
 
                 WatchKey key = watchService.take();
 
                 for (WatchEvent<?> event : key.pollEvents()) {
 
                     if (event.kind() == OVERFLOW) {
-                        System.out.println("Some filesystem events may have been lost.");
+                       log.info(
+                                "Some filesystem events may have been lost"
+                        );
                         continue;
                     }
 
                     Path fileName = (Path) event.context();
 
-                    createDirectory();
-                    Path fullPath = directory.resolve(fileName);
+                    Path fullPath = directory.resolve(fileName)
+                            .toAbsolutePath()
+                            .normalize();
+
+                    if (Files.isDirectory(fullPath)) {
+                        continue;
+                    }
 
                     FileSystemEvent fileSystemEvent =
-                            new FileSystemEvent(event.kind(), fullPath);
+                            new FileSystemEvent(
+                                    event.kind(),
+                                    fullPath
+                            );
 
-                    fileEventChannel.send(
-                            MessageBuilder
-                                    .withPayload(fileSystemEvent)
-                                    .build()
-                    );
+                    try {
+
+                        fileEventChannel.send(
+                                MessageBuilder
+                                        .withPayload(fileSystemEvent)
+                                        .build()
+                        );
+
+                       log.info(
+                                "Event published: " + fullPath
+                        );
+
+                    } catch (RuntimeException e) {
+
+                     log.error(
+                                "Event processing failed: " + e.getMessage()
+                        );
+                    }
                 }
 
                 if (!key.reset()) {
-                    System.out.println("Directory registration is invalid.");
+                   log.info(
+                            "Directory registration is invalid"
+                    );
                     break;
                 }
             }
 
         } catch (IOException e) {
-            System.err.println("Watcher error: " + e.getMessage());
+
+    
+        log.error(
+                    "Watcher error: " + e.getMessage()
+            );
 
         } catch (InterruptedException e) {
+
             Thread.currentThread().interrupt();
-            System.out.println("Watcher interrupted.");
-        }
-    }
 
-    private void createDirectory(){
-
-        Path filePath=Path.of(backupPath);
-
-        if(!Files.exists(filePath)){
-            try {
-                Files.createDirectory(filePath);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+           log.info("Watcher interrupted");
         }
     }
 }

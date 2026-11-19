@@ -1,5 +1,6 @@
 package org.demo.minicore.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.demo.minicore.entity.User;
 import org.demo.minicore.repository.UserRepository;
 import org.demo.minicore.rmq.ConsumerClient;
@@ -10,6 +11,7 @@ import java.util.List;
 
 
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -65,13 +67,12 @@ public class UserService {
                String startResponse =
                        consumerClient.startConsumer(newUsername);
 
-               System.out.println(startResponse);
-
+               log.info(startResponse);
                // Step 3: Stop the old consumer
                String stopResponse =
                        consumerClient.stopConsumer(oldUsername);
 
-               System.out.println(stopResponse);
+               log.info(stopResponse);
 
                // Step 4: Delete the old queue
                rmqServices.deleteUser(oldUsername);

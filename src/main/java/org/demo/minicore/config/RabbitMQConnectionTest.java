@@ -29,6 +29,6 @@ public class RabbitMQConnectionTest implements CommandLineRunner {
 //                channel -> channel.isOpen()
 //        );
 
-//        System.out.println("RabbitMQ Connection Status: " + connected);
+//        log.info("RabbitMQ Connection Status: " + connected);
     }
 }

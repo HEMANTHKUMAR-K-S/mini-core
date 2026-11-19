@@ -1,8 +1,8 @@
+
 package org.demo.minicore.config;
 
-
 import jakarta.annotation.PostConstruct;
-import org.demo.minicore.service.FileProcessingService;
+import lombok.extern.slf4j.Slf4j;
 import org.demo.minicore.watcher.DirectoryWatcher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Slf4j
 @Configuration
 public class FileWatcherConfig {
 
@@ -22,30 +23,31 @@ public class FileWatcherConfig {
     @Value("${file.backupath}")
     private String backupPath;
 
-    private final FileProcessingService fileProcessingService;
     private final DirectoryWatcher directoryWatcher;
 
-    public FileWatcherConfig(
-            FileProcessingService fileProcessingService,
-            DirectoryWatcher directoryWatcher) {
-
-        this.fileProcessingService = fileProcessingService;
+    public FileWatcherConfig(DirectoryWatcher directoryWatcher) {
         this.directoryWatcher = directoryWatcher;
     }
 
     @PostConstruct
     public void createDirectories() throws IOException {
 
-        Path inputFolder = Path.of(inputPath);
-        Path backupFolder = Path.of(backupPath);
+        Path inputFolder = Path.of(inputPath)
+                .toAbsolutePath().normalize();
 
-        if (!Files.exists(inputFolder)) {
-            Files.createDirectories(inputFolder);
+        Path backupFolder = Path.of(backupPath)
+                .toAbsolutePath().normalize();
+
+        if (inputFolder.equals(backupFolder)) {
+            throw new IllegalStateException(
+                    "Input and backup directories cannot be the same"
+            );
         }
 
-        if (!Files.exists(backupFolder)) {
-            Files.createDirectories(backupFolder);
-        }
+        Files.createDirectories(inputFolder);
+        Files.createDirectories(backupFolder);
+        log.info("Input Directory  : " + inputFolder);
+        log.info("Backup Directory: " + backupFolder);
     }
 
     @Bean
@@ -57,9 +59,11 @@ public class FileWatcherConfig {
                     () -> directoryWatcher.startWatching(inputPath)
             );
 
-            watcherThread.setName("input-directory-watcher");
+            watcherThread.setName("Filewatcher");
             watcherThread.setDaemon(true);
             watcherThread.start();
+
+            log.info("Directory watcher started");
         };
     }
 }

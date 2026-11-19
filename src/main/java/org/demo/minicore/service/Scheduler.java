@@ -27,10 +27,10 @@
 //    public void scheduling(){
 //
 //       List<User> users = userRepository.findAll();
-////       System.out.println(users);
+////       log.info(users);
 //
 ////       for(User user:users){
-////           System.out.println(user.getName());
+////           log.info(user.getName());
 ////       }
 //
 //      int count=users.size();
@@ -47,7 +47,7 @@
 //
 //        analyticsRepository.save(analytics);
 //
-//        System.out.println("count:"+count+"\n"+"AvgSal:"+avgSal+"\n"+"AvgAge:"+avgAge);
+//        log.info("count:"+count+"\n"+"AvgSal:"+avgSal+"\n"+"AvgAge:"+avgAge);
 //
 //    }
 //}

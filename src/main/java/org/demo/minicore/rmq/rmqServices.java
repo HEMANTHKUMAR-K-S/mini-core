@@ -1,10 +1,12 @@
 
 package org.demo.minicore.rmq;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class rmqServices {
 
@@ -28,7 +30,7 @@ public class rmqServices {
 
         amqpAdmin.declareExchange(exchange);
 
-//        System.out.println("Common exchange created: " + exchangeName);
+//        log.info("Common exchange created: " + exchangeName);
     }
 
     // Create a queue for each user
@@ -49,9 +51,9 @@ public class rmqServices {
         amqpAdmin.declareQueue(queue);
         amqpAdmin.declareBinding(binding);
 
-        System.out.println("Created queue: " + queueName);
-        System.out.println("Bound to exchange: " + exchangeName);
-        System.out.println("Routing key: " + userName);
+        log.info("Created queue: " + queueName);
+        log.info("Bound to exchange: " + exchangeName);
+        log.info("Routing key: " + userName);
     }
 
     // Delete only the user's queue
@@ -61,7 +63,7 @@ public class rmqServices {
 
         amqpAdmin.deleteQueue(queueName);
 
-        System.out.println("Deleted queue: " + queueName);
+        log.info("Deleted queue: " + queueName);
     }
 
     // Update username: create new queue, then remove old queue
@@ -75,7 +77,7 @@ public class rmqServices {
 
         deleteUser(oldUser);
 
-        System.out.println("Updated queue from " + oldUser + " to " + newUser);
+        log.info("Updated queue from " + oldUser + " to " + newUser);
     }
 
 }
