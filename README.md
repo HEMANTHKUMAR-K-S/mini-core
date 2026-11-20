@@ -279,3 +279,110 @@ This project demonstrates practical implementation of:
 - Tasklet-based file operations.
 - Transaction management.
 - File validation and duplicate handling.
+
+
+
+## Database Polling with Spring Integration
+
+### Overview
+
+Implemented separate database polling mechanisms for Check-In and Check-Out operations using Spring Integration JDBC Polling Adapters.
+
+Both pollers execute independently at a fixed interval of 5 seconds, retrieve attendance counts from the `attendance_log` table, and send the results to their respective Service Activators through separate DirectChannels.
+
+### Architecture
+
+```text
+            
+             |                   |
+          Check-In           Check-Out 
+             |                   |
+         CheckIn SA          CheckOut SA
+             |                   |
+             +---------+---------+
+                       |
+                user_logs table
+                       |
+             +---------+---------+
+             |                   |
+       Check-In Poller     Check-Out Poller
+             |                   |
+       COUNT(CHECK-IN)     COUNT(CHECK-OUT)
+             |                   |
+      checkInCountChannel  checkOutCountChannel
+             |                   |
+       Check-In SA         Check-Out SA
+             |                   |
+       Log total count     Log total count
+```
+
+### Components
+
+**1. JDBC Polling Adapters**
+
+- Uses `JdbcPollingChannelAdapter` to execute database queries.
+- Check-In poller retrieves the total number of Check-In records.
+- Check-Out poller retrieves the total number of Check-Out records.
+- Both pollers execute every 5 seconds using `Pollers.fixedDelay(5000)`.
+
+**2. Message Channels**
+
+Created two independent `DirectChannel` beans:
+
+- `checkInCountChannel`
+- `checkOutCountChannel`
+
+These channels transfer polling results to their respective Service Activators.
+
+**3. Service Activators**
+
+Implemented two Service Activators:
+
+- `CheckInPollerServiceActivator`
+- `CheckoutPollerServiceActivator`
+
+Each Service Activator receives a `List<Long>` containing the JDBC query results, extracts the first element using `get(0)`, and logs the total count.
+
+### Database Queries
+
+Check-In:
+
+```sql
+SELECT COUNT(*) AS total
+FROM user_logs
+WHERE status = 'CHECK-IN';
+```
+
+Check-Out:
+
+```sql
+SELECT COUNT(*) AS total
+FROM user_logs
+WHERE status = 'CHECK-OUT';
+```
+
+### Execution Flow
+
+1. The JDBC Polling Adapter executes its respective SQL query every 5 seconds.
+2. The RowMapper converts the query result into a Java `Long`.
+3. Spring Integration creates a message containing the query result.
+4. The message is sent to the corresponding DirectChannel.
+5. The Service Activator receives the message payload.
+6. The total count is extracted and printed using application logging.
+
+### Expected Logs
+
+```text
+Total check-ins : 5
+Total check-outs : 3
+```
+
+### Key Concepts Learned
+
+- JDBC Polling Adapter
+- Spring Integration Message and Payload
+- DirectChannel
+- Service Activator
+- Polling with fixed delay
+- Database-to-channel communication
+- Message payload handling
