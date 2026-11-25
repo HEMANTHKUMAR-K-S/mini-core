@@ -4,6 +4,7 @@ import org.demo.minicore.rmq.rmqServices;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,10 @@ public class MiniCoreApplication extends SpringBootServletInitializer {
     }
 
     @Bean
+    @ConditionalOnProperty(
+            name = "app.rabbitmq.initialize",
+            havingValue = "true"
+    )
     CommandLineRunner initializeRabbitMQ(rmqServices rmqServices) {
         return args -> rmqServices.createExchange();
     }

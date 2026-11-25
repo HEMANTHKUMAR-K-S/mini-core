@@ -22,10 +22,19 @@ spring:
     username: ${rabbitmq.username}
     password: ${rabbitmq.password}
 
+server:
+  port: 8080
+
 rabbitmq:
   exchange:
     name: ${rabbitmq.exchange.name}
     type: ${rabbitmq.exchange.type}
 
-server:
-  port: 8080
+batch:
+  processing:
+    fetch:
+      job-size: 50
+
+app:
+  rabbitmq:
+    initialize: false

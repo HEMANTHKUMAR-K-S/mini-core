@@ -68,14 +68,14 @@ public class CheckInService {
 
     // ASYNCHRONOUS LOG RETRIEVAL
     @Transactional(readOnly = true)
-    public List<org.demo.minicore.attendance.dto.LogResponse>
+    public List<org.demo.minicore.dto.LogResponse>
     getLogs(String name) {
 
         return attendanceRepo
                 .findByUser_NameOrderByCheckInTimeDesc(name)
                 .stream()
                 .map(record ->
-                        new org.demo.minicore.attendance.dto.LogResponse(
+                        new org.demo.minicore.dto.LogResponse(
                                 record.getCheckInTime()))
                 .toList();
     }

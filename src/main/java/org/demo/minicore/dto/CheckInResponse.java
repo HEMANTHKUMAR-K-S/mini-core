@@ -8,13 +8,13 @@ public class CheckInResponse {
     private String name;
     private String status;
     private LocalDateTime checkInTime;
-    private List<org.demo.minicore.attendance.dto.LogResponse> logs;
+    private List<org.demo.minicore.dto.LogResponse> logs;
 
     public CheckInResponse(
             String name,
             String status,
             LocalDateTime checkInTime,
-            List<org.demo.minicore.attendance.dto.LogResponse> logs) {
+            List<org.demo.minicore.dto.LogResponse> logs) {
 
         this.name = name;
         this.status = status;
@@ -34,7 +34,7 @@ public class CheckInResponse {
         return checkInTime;
     }
 
-    public List<org.demo.minicore.attendance.dto.LogResponse> getLogs() {
+    public List<org.demo.minicore.dto.LogResponse> getLogs() {
         return logs;
     }
 }

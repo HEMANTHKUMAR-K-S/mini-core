@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ThreadExecutorConfig {
 
 
-
     private int processSize=Runtime.getRuntime().availableProcessors();
 
 

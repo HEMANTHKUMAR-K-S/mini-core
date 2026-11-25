@@ -1,4 +1,4 @@
-package org.demo.minicore.attendance.dto;
+package org.demo.minicore.dto;
 
 import java.time.LocalDateTime;
 

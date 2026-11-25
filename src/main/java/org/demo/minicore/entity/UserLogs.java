@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 @Entity
 public class UserLogs {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -16,6 +17,16 @@ public class UserLogs {
     private String username;
 
     private String Status;
+
+    private String txId;
+
+    public String getTxId() {
+        return txId;
+    }
+
+    public void setTxId(String txId) {
+        this.txId = txId;
+    }
 
     public Long getId() {
         return id;
