@@ -2,6 +2,7 @@ package org.demo.minicore.batch;
 
 import org.demo.minicore.entity.UserLogs;
 import org.demo.minicore.repository.UserLogRepo;
+import org.demo.minicore.service.CheckInProcessService;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,10 +20,12 @@ public class CheckInTasklet implements Tasklet {
 
     Logger log= LoggerFactory.getLogger(CheckInTasklet.class);
 
-    private final UserLogRepo userLogRepo;
+   private final CheckInProcessService processService;
+   private final RetryTemplate retryTemplate;
 
-    public CheckInTasklet(UserLogRepo userLogRepo) {
-        this.userLogRepo = userLogRepo;
+    public CheckInTasklet(CheckInProcessService processService, RetryTemplate retryTemplate) {
+        this.processService = processService;
+        this.retryTemplate = retryTemplate;
     }
 
 
@@ -32,9 +36,27 @@ public class CheckInTasklet implements Tasklet {
                 .getJobParameters()
                 .get("txId");
 
-        List<UserLogs> records = userLogRepo.findAllByTxId(txId);
 
-        log.info("Records fetched for txId {}: {}", txId, records.size());
+        retryTemplate.execute(context->{
+
+            int attempt = context.getRetryCount() + 1;
+
+            log.info(
+                    "Check-In processing attempt: {} for txId: {}",
+                    attempt,
+                    txId
+            );
+
+           processService.process(txId);
+
+            return null;
+        });
+
+
+
+//        List<UserLogs> records = userLogRepo.findAllByTxId(txId);
+//
+//        log.info("Records fetched for txId {}: {}", txId, records.size());
 
 //        for (UserLogs record : records) {
 //

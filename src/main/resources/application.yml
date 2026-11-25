@@ -24,7 +24,6 @@ spring:
 
 server:
   port: 8080
-
 rabbitmq:
   exchange:
     name: ${rabbitmq.exchange.name}
@@ -34,6 +33,32 @@ batch:
   processing:
     fetch:
       job-size: 50
+
+    retry:
+      exceptions:
+        - name: org.springframework.dao.TransientDataAccessException
+          max-attempts: 3
+          delay: 3000
+
+        - name: org.springframework.dao.OptimisticLockingFailureException
+          max-attempts: 3
+          delay: 2000
+
+        - name: java.net.SocketTimeoutException
+          max-attempts: 2
+          delay: 1000
+
+        - name: java.net.ConnectException
+          max-attempts: 3
+          delay: 3000
+
+        - name: java.util.concurrent.TimeoutException
+          max-attempts: 3
+          delay: 2000
+
+        - name: org.springframework.amqp.AmqpException
+          max-attempts: 3
+          delay: 5000
 
 app:
   rabbitmq:

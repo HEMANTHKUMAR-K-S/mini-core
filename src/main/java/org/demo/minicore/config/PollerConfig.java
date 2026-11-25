@@ -44,7 +44,7 @@ public class PollerConfig {
         return IntegrationFlow
                 .from(adapter,
                         endpoint -> endpoint.poller(
-                                Pollers.fixedDelay(100)
+                                Pollers.fixedDelay(1000)
                         )
                 )
                 .channel("checkInCountChannel")
@@ -70,7 +70,7 @@ public class PollerConfig {
         return IntegrationFlow
                 .from(adapter,
                         endpoint -> endpoint.poller(
-                                Pollers.fixedDelay(10)
+                                Pollers.fixedDelay(1000)
                         )
                 )
                 .channel("checkOutCountChannel")

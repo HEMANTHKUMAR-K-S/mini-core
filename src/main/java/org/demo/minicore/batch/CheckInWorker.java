@@ -32,35 +32,79 @@ public class CheckInWorker {
         this.checkInJob = checkInJob;
     }
 
+
     public void process() {
 
-        String txId = recordClaimService.claimRecords("CHECK-IN");
+        while (!Thread.currentThread().isInterrupted()) {
 
-        if (txId == null) {
-            log.info("No pending Check-In records available.");
-            return;
-        }
+            String txId = recordClaimService.claimRecords("CHECK-IN");
 
-        log.info("Check-In worker started. txId: {}", txId);
+            if (txId == null) {
+                log.info("No pending Check-In records available.");
+                return;
+            }
 
-        try {
-            JobParameters jobParameters =
-                    new JobParametersBuilder()
-                            .addString("txId", txId)
-                            .toJobParameters();
+            log.info("Check-In worker started. txId: {}", txId);
 
-            JobExecution execution =
-                    jobOperator.start(checkInJob, jobParameters);
+            try {
+                JobParameters jobParameters =
+                        new JobParametersBuilder()
+                                .addString("txId", txId)
+                                .toJobParameters();
 
-            log.info(
-                    "Check-In Job submitted. txId: {}, Status: {}",
-                    txId,
-                    execution.getStatus()
-            );
+                JobExecution execution =
+                        jobOperator.start(checkInJob, jobParameters);
 
-        } catch (Exception e) {
-            log.error("Failed to submit Check-In Job. txId: {}", txId, e);
-            throw new RuntimeException(e);
+                log.info(
+                        "Check-In Job completed. txId: {}, Status: {}",
+                        txId,
+                        execution.getStatus()
+                );
+
+                if (execution.getStatus().isUnsuccessful()) {
+                    log.error("Check-In batch failed. Moving to next batch. txId: {}", txId);
+                }
+
+            } catch (Exception e) {
+                log.error(
+                        "Check-In Job failed. Moving to next batch. txId: {}",
+                        txId,
+                        e
+                );
+            }
         }
     }
+
+
+//    public void process() {
+//
+//        String txId = recordClaimService.claimRecords("CHECK-IN");
+//
+//        if (txId == null) {
+//            log.info("No pending Check-In records available.");
+//            return;
+//        }
+//
+//        log.info("Check-In worker started. txId: {}", txId);
+//
+//        try {
+//            JobParameters jobParameters =
+//                    new JobParametersBuilder()
+//                            .addString("txId", txId)
+//                            .toJobParameters();
+//
+//            JobExecution execution =
+//                    jobOperator.start(checkInJob, jobParameters);
+//
+//            log.info(
+//                    "Check-In Job submitted. txId: {}, Status: {}",
+//                    txId,
+//                    execution.getStatus()
+//            );
+//
+//        } catch (Exception e) {
+//            log.error("Failed to submit Check-In Job. txId: {}", txId, e);
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

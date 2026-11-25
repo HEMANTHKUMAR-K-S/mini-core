@@ -49,7 +49,6 @@ public class RecordClaimService {
         records.forEach(record -> record.setTxId(txId));
 
         userLogsRepository.saveAll(records);
-
         return txId;
     }
 }
