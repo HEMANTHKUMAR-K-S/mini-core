@@ -15,9 +15,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 
-@PropertySource(
-        "file:C:/Users/Solum_BLR_IND/Desktop/intervals/application.properties"
-)
+//@PropertySource(
+//        "file:C:/Users/Solum_BLR_IND/Desktop/intervals/application.properties"
+//)
 public class MiniCoreApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
@@ -28,12 +28,12 @@ public class MiniCoreApplication extends SpringBootServletInitializer {
          return application.sources(MiniCoreApplication.class);
     }
 
-    @Bean
-    @ConditionalOnProperty(
-            name = "app.rabbitmq.initialize",
-            havingValue = "true"
-    )
-    CommandLineRunner initializeRabbitMQ(rmqServices rmqServices) {
-        return args -> rmqServices.createExchange();
-    }
+//    @Bean
+//    @ConditionalOnProperty(
+//            name = "app.rabbitmq.initialize",
+//            havingValue = "true"
+//    )
+//    CommandLineRunner initializeRabbitMQ(rmqServices rmqServices) {
+//        return args -> rmqServices.createExchange();
+//    }
 }

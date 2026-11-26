@@ -4,6 +4,7 @@ import org.demo.minicore.dto.CheckInResponse;
 import org.demo.minicore.dto.UserLogsResoponse;
 import org.demo.minicore.entity.UserLogs;
 import org.demo.minicore.repository.UserLogRepo;
+import org.demo.minicore.rmq.MsgProducer;
 import org.demo.minicore.service.CheckInService;
 import org.demo.minicore.repository.UserRepository;
 import org.demo.minicore.service.UserLogService;
@@ -23,16 +24,18 @@ import java.util.List;
 @Component
 public class CheckInServiceActivator {
 
-private final UserLogService userLogService;
+    private final MsgProducer msgProducer;
 
-    public CheckInServiceActivator(UserLogService userLogService) {
-        this.userLogService = userLogService;
+    public CheckInServiceActivator(MsgProducer msgProducer) {
+        this.msgProducer = msgProducer;
     }
 
-    @ServiceActivator(inputChannel = "checkInChannel")
-    public UserLogsResoponse checkIn(String username){
 
-        userLogService.saveLogs(username,"CHECK-IN");
+    @ServiceActivator(inputChannel = "checkInChannel")
+ public UserLogsResoponse checkIn(String username){
+
+
+        msgProducer.sendMessage(username,true);
 
         return new UserLogsResoponse(
                 "Check-in successful",

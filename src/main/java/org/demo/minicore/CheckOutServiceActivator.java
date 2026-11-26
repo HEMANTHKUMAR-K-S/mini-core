@@ -3,6 +3,7 @@ package org.demo.minicore;
 import org.demo.minicore.dto.UserLogsResoponse;
 import org.demo.minicore.repository.AttendanceRepo;
 import org.demo.minicore.repository.UserRepository;
+import org.demo.minicore.rmq.MsgProducer;
 import org.demo.minicore.service.CheckInService;
 import org.demo.minicore.service.CheckOutService;
 import org.demo.minicore.service.UserLogService;
@@ -17,17 +18,19 @@ import org.springframework.stereotype.Component;
 public class CheckOutServiceActivator {
 
 
-    private final UserLogService userLogService;
+ private final MsgProducer msgProducer;
 
-    public CheckOutServiceActivator(UserLogService userLogService) {
-        this.userLogService = userLogService;
+    public CheckOutServiceActivator(MsgProducer msgProducer) {
+        this.msgProducer = msgProducer;
     }
+
 
     @ServiceActivator(inputChannel = "checkOutChannel")
 
     public UserLogsResoponse checkIn(String username){
 
-        userLogService.saveLogs(username,"CHECK-OUT");
+        msgProducer.sendMessage(username,false);
+
 
         return new UserLogsResoponse(
                 "Check-out successful",

@@ -21,10 +21,19 @@ spring:
     port: ${rabbitmq.port}
     username: ${rabbitmq.username}
     password: ${rabbitmq.password}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 1
+        concurrency: 1
+        max-concurrency: 1
 
 server:
   port: 8080
+
 rabbitmq:
+  queue :
+   name : miniCore.queue
   exchange:
     name: ${rabbitmq.exchange.name}
     type: ${rabbitmq.exchange.type}
