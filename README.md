@@ -917,3 +917,45 @@ Implemented asynchronous Check-In and Check-Out batch processing in miniCore usi
 The solution uses separate workers, thread pools, Tasklet-based Jobs, unique transaction IDs, and JobExecutionListeners.
 
 The implementation supports independent batch execution and ensures that records are deleted only after successful processing.
+
+
+26-11-2026
+
+## RabbitMQ Integration – Check-In & Check-Out
+
+Implemented RabbitMQ messaging for user Check-In and Check-Out operations.
+
+### Message Processing Flow
+
+1. Check-In and Check-Out requests are published to a shared RabbitMQ queue.
+2. A Boolean message header identifies the operation:
+    - `true` – Check-In
+    - `false` – Check-Out
+3. The RabbitMQ consumer receives messages and processes the corresponding attendance operation.
+4. Processed attendance records are stored in the database.
+
+### Database Polling and Threshold Monitoring
+
+Integrated the existing Check-In and Check-Out database pollers with a combined threshold monitor.
+
+The pollers retrieve the total Check-In and Check-Out records from the database and pass the counts to the threshold monitor.
+
+### Threshold-Based Backpressure
+
+Implemented dynamic RabbitMQ listener control based on the combined database record count.
+
+| Combined database records | RabbitMQ listener action |
+|---|---|
+| Below 200 | Resume message consumption |
+| 200 or above | Stop message consumption |
+
+The `RabbitListenerEndpointRegistry` is used to control the RabbitMQ listener lifecycle through `ListenerControllerService`.
+
+### Key Components
+
+- `MsgProducer` – Publishes Check-In and Check-Out messages.
+- `MsgConsumer` – Consumes messages and stores attendance records.
+- `ListenerControllerService` – Controls RabbitMQ listener start and stop.
+- `DatabaseThresholdMonitor` – Calculates combined database records and applies the threshold.
+- `CheckInPollerServiceActivator` – Supplies Check-In database counts.
+- `CheckoutPollerServiceActivator` – Supplies Check-Out database counts.
